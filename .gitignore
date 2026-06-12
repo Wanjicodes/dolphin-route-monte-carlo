@@ -1,1 +1,11 @@
+# Project-specific
+venv/
+outputs/*.json
+outputs/cache/
+.env
+.vscode/
+*.log
 
+# Data caches
+data/cache/
+data/raw/
