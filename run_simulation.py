@@ -12,7 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from data.assumptions import SIMULATION, ROUTE, SCENARIOS
+from data.assumptions import SIMULATION, ROUTE, SCENARIOS, COSTS, USE_LIVE_DATA
 from engine.shock_generator import ShockPack
 from engine.impact_model import run_impact_model
 from engine.risk_metrics import compute_all_metrics, scenario_comparison, fuel_sensitivity
@@ -26,6 +26,25 @@ def run():
           f"{ROUTE['aircraft']} | {ROUTE['frequency_daily']}x daily")
     print(f"  Paths: {SIMULATION['n_paths']:,} | Seed: {SIMULATION['seed']}")
     print("=" * 65)
+
+ # ── Live data integration ────────────────────────────────────────────────
+    if USE_LIVE_DATA:
+        print("\n[0/4] Refreshing assumptions from live data sources...")
+        try:
+            from data.ingestion.live_assumptions import get_live_fuel_assumptions
+            live = get_live_fuel_assumptions(months_back=24, verbose=True)
+            if live["is_live"]:
+                # Override hardcoded fuel price with live latest
+                COSTS["jet_fuel_price_usd_per_barrel"] = live["jet_fuel_price_usd_per_barrel"]
+                print(f"      [OK] Fuel price updated: ${live['jet_fuel_price_usd_per_barrel']:.2f}/bbl")
+                print(f"      [OK] Source: {live['data_sources']['jet_fuel']}")
+            else:
+                print(f"      [WARN] Live data unavailable, using hardcoded ${COSTS['jet_fuel_price_usd_per_barrel']}/bbl")
+        except Exception as e:
+            print(f"      [WARN] Live data integration failed: {e}")
+            print(f"      [WARN] Falling back to hardcoded ${COSTS['jet_fuel_price_usd_per_barrel']}/bbl")
+    else:
+        print(f"\n[0/4] Using hardcoded assumptions (USE_LIVE_DATA=False)")
 
     t0 = time.time()
 
@@ -101,6 +120,8 @@ def run():
             "n_paths": SIMULATION["n_paths"],
             "seed": SIMULATION["seed"],
             "n_months": SIMULATION["n_months"],
+            "use_live_data": USE_LIVE_DATA,
+            "fuel_price_used": COSTS["jet_fuel_price_usd_per_barrel"],
         },
         "forecast": {
             "baseline": forecast["baseline"].tolist(),

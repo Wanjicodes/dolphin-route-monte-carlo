@@ -6,7 +6,16 @@ Sources:
 - Emirates Group Annual Report 2024-25 (AED 127.9B revenue, 31% fuel share, 80% PSF)
 - Competitor intelligence: Emirates 35% ISC market share, load factor ~82%
 - Route: Dubai (DXB) → Mumbai (BOM), 2,200km, Boeing 777-300ER
+
+Live data integration:
+- Fuel prices: optionally overridden by EIA + FRED live data
+- See: data/ingestion/live_assumptions.py
 """
+
+# ── LIVE DATA OVERRIDE ────────────────────────────────────────────────────────
+# Set to True to pull live fuel data from EIA + FRED APIs.
+# Set to False for reproducible runs with hardcoded values.
+USE_LIVE_DATA = True
 
 # ── ROUTE CONFIGURATION ───────────────────────────────────────────────────────
 ROUTE = {
